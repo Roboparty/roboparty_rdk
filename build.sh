@@ -115,10 +115,13 @@ do_setup() {
     echo "========================================="
     echo "[setup] Syncing source code with repo..."
     echo "========================================="
-    export REPO_URL='https://mirrors.tuna.tsinghua.edu.cn/git/git-repo/'
+    export REPO_URL='https://mirrors.ustc.edu.cn/aosp/git-repo'
     cd "${HR_LOCAL_DIR}"
+    if [ -d "${HR_LOCAL_DIR}/.repo" ]; then
+        chown -R "${SUDO_USER}:${SUDO_USER}" "${HR_LOCAL_DIR}/.repo"
+    fi
     if [ ! -d "${HR_LOCAL_DIR}/.repo" ]; then
-        sudo -u "${SUDO_USER}" bash -c "export REPO_URL='https://mirrors.tuna.tsinghua.edu.cn/git/git-repo/' && cd '${HR_LOCAL_DIR}' && repo init -u git@github.com:D-Robotics/x5-manifest.git -b main"
+        sudo -u "${SUDO_USER}" bash -c "export REPO_URL='https://mirrors.ustc.edu.cn/aosp/git-repo' && cd '${HR_LOCAL_DIR}' && repo init --repo-url=https://mirrors.ustc.edu.cn/aosp/git-repo -u git@github.com:D-Robotics/x5-manifest.git -b main"
     fi
     sudo -u "${SUDO_USER}" bash -c "cd '${HR_LOCAL_DIR}' && repo sync" || echo "[setup] repo sync reported errors (may be safe to ignore if only x5-rdk-gen checkout failed)"
 
@@ -131,9 +134,17 @@ do_setup() {
 do_kernel() {
     echo ""
     echo "========================================="
-    echo "[kernel] Building standard kernel..."
+    echo "[kernel] Syncing source to clean state..."
     echo "========================================="
     cd "${HR_LOCAL_DIR}"
+    chown -R "${SUDO_USER}:${SUDO_USER}" "${HR_LOCAL_DIR}/.repo" 2>/dev/null || true
+    sudo -u "${SUDO_USER}" bash -c "cd '${HR_LOCAL_DIR}' && repo forall -c 'git reset --hard HEAD && git clean -fdx'" || true
+    sudo -u "${SUDO_USER}" bash -c "cd '${HR_LOCAL_DIR}' && repo sync" || echo "[kernel] repo sync warning (non-fatal)"
+
+    echo ""
+    echo "========================================="
+    echo "[kernel] Building standard kernel..."
+    echo "========================================="
     bash "${HR_LOCAL_DIR}/mk_kernel.sh"
 
     echo ""
@@ -176,6 +187,8 @@ do_bootloader() {
 # rootfs: Build Ubuntu samplefs
 ########################################
 do_rootfs() {
+    export BUILD_ROBOPARTY_PACKAGES="no"
+    export BOARD="robopi0"
     echo ""
     echo "========================================="
     echo "[rootfs] Building Ubuntu samplefs..."
