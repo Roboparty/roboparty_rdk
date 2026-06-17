@@ -483,7 +483,7 @@ install_roboparty()
 				# 咱们是robopi0的板子，利用正则或者变量特性，直接截取板卡名作为源名称，代码更简洁
 				# roboparty_dist="robopi0"
 				roboparty_dist="${BOARD}"
-				roboparty_pkgs="roboto-all"
+				roboparty_pkgs="roboparty-all"
 				;;
 			*)
 				log_out "BUILD_ROBOPARTY_PACKAGES=yes but board '${BOARD:-}' has no RoboParty source defined, skipping" "" "wrn"
